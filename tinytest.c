@@ -66,6 +66,8 @@ _testcase_run_forked(const struct testcase_t *testcase)
 #ifdef WIN32
 	int ok;
 	char buffer[4096];
+	const char *verbosity;
+	STARTUPINFO si;
 	PROCESS_INFORMATION info;
 	DWORD exitcode;
 
@@ -75,11 +77,18 @@ _testcase_run_forked(const struct testcase_t *testcase)
 		abort();
 	}
 	printf("[forking] ");
-	snprintf(buffer, sizeof(buffer), "%s --no-fork --exitcode %s"
-		 commandname, testcase->name);
+
+	verbosity = (opt_verbosity == 2) ? "--loud" :
+		(opt_verbosity == 0) ? "--quiet" : "";
+	snprintf(buffer, sizeof(buffer), "%s --no-fork --exitcode %s %s",
+		 commandname, verbosity, testcase->name);
+
+	memset(&si, 0, sizeof(si));
+	memset(&info, 0, sizeof(info));
+	si.cb = sizeof(si);
 
 	ok = CreateProcess(commandname, buffer, NULL, NULL, 0,
-			   0, NULL, NULL, NULL, &info);
+			   0, NULL, NULL, &si, &info);
 	if (!ok) {
 		printf("CreateProcess failed!\n");
 		return 0;
@@ -130,7 +139,7 @@ testcase_run(const struct testcase_t *testcase)
 		return 1;
 	}
 
-	if (opt_verbosity)
+	if (opt_verbosity && !opt_nofork)
 		printf("%s... ", testcase->name);
 	else
 		cur_test_name = testcase->name;
@@ -143,11 +152,12 @@ testcase_run(const struct testcase_t *testcase)
 
 	if (outcome) {
 		++n_ok;
-		if (opt_verbosity)
+		if (opt_verbosity && !opt_nofork)
 			puts("OK");
 	} else {
 		++n_bad;
-		printf("\n  [%s FAILED]\n", testcase->name);
+		if (!opt_nofork)
+			printf("\n  [%s FAILED]\n", testcase->name);
 	}
 
 	if (opt_exitcode) {
