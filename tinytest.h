@@ -8,9 +8,10 @@
 #ifndef _TINYTEST_H
 #define _TINYTEST_H
 
-#define TT_FORK  1
-#define TT_SKIP  2
-#define _TT_ENABLED  4
+#define TT_FORK  (1<<0)
+#define TT_SKIP  (1<<1)
+#define _TT_ENABLED  (1<<2)
+#define TT_FIRST_USER_FLAG (1<<3)
 
 typedef void (*testcase_fn)(void *);
 
