@@ -8,6 +8,9 @@
 #include "tinytest.h"
 #include "tinytest_macros.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 void testcase_add(void *data)
 {
@@ -23,6 +26,8 @@ void testcase_add2(void *data)
 	tt_want(10==10);
 	tt_int_eq(1+1, 2);
 	tt_int_neq(1+1, 3);
+	if (!malloc(-10))
+		tt_fail_perror("malloc");
  end:
 	return;
 }

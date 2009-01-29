@@ -104,4 +104,11 @@
 #define tt_uint_neq(a,b)			\
 	tt_assert_neq_type(a,b,unsigned long,"%lu")
 
+#define tt_fail_perror(op)				\
+	TT_STMT_BEGIN					\
+	_tinytest_set_test_failed();			\
+	TT_GRIPE(("%s: %s",(op),strerror(errno)));	\
+	TT_EXIT_TEST_FUNCTION;				\
+	TT_STMT_END
+
 #endif

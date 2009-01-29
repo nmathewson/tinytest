@@ -17,7 +17,7 @@ int test_ok = 0;
 int called = 0;
 
 
-#define TT_NEED_SOCKETPAIR TT_FIRST_USER_FLAG
+// #define TT_NEED_BASE (TT_FIRST_USER_FLAG<<1)
 
 static void *
 legacy_test_setup(const struct testcase_t *testcase)
