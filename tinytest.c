@@ -183,25 +183,18 @@ tinytest_main(int c, const char **v, struct testcase_t *cases)
 				opt_verbosity = 0;
 			else if (!strcmp(v[i], "--loud"))
 				opt_verbosity = 2;
-		} else if (strchr(v[i],'*')) {
-			int found = 0;
-			int pos = strchr(v[i], '*')-v[i];
-			for (j=0; j<n_testcases; ++j) {
-				if (!strncmp(cases[j].name, v[i], pos))
-					tc_enabled[j] = found = 1;
-			}
-			if (!found) {
-				printf("No tests matched %s!\n", v[i]);
-				goto out;
-			}
 		} else {
 			int found = 0;
+			int wildcard;
+			if (strchr(v[i], '*'))
+				wildcard = strchr(v[i], '*')-v[i];
+			else
+				wildcard = 8192;
 
 			n_enabled++;
 			for (j=0; j<n_testcases; ++j) {
-				if (!strcmp(cases[j].name, v[i])) {
+				if (!strncmp(cases[j].name, v[i], wildcard)) {
 					tc_enabled[j] = found = 1;
-					break;
 				}
 			}
 			if (!found) {

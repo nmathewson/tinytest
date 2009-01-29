@@ -27,9 +27,18 @@ void testcase_add2(void *data)
 	return;
 }
 
+
+void testcase_other(void *data)
+{
+	tt_assert(10==10);
+ end:
+	return;
+}
+
 struct testcase_t tc[] = {
 	{ "add", testcase_add, TT_FORK, NULL },
 	{ "add2", testcase_add2, 0, NULL },
+	{ "other", testcase_other, 0, NULL },
 	{ NULL, NULL, 0 },
 };
 
