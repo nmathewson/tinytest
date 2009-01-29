@@ -15,3 +15,6 @@ tt: $(OBJS)
 
 lines:
 	wc -l tinytest.c tinytest_macros.h tinytest.h
+
+clean:
+	rm -f *.o *~ tt
