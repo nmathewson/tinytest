@@ -238,7 +238,7 @@ _tinytest_set_test_failed(void)
 {
 	if (opt_verbosity == 0 && cur_test_name) {
 		printf("%s... ", cur_test_name);
-		cur_test_name = 0;
+		cur_test_name = NULL;
 	}
 	cur_test_outcome = 0;
 }
