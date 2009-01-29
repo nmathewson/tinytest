@@ -108,7 +108,8 @@ _testcase_run_forked(const struct testgroup_t *group,
 			perror("opening pipe");
 	}
 
-	printf("[forking] ");
+	if (opt_verbosity)
+		printf("[forking] ");
 	pid = fork();
 	if (!pid) {
 		/* child. */
