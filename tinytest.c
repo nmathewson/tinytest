@@ -56,9 +56,6 @@ const char *cur_test_name = NULL;
 #ifdef WIN32
 /** Pointer to argv[0] for win32. */
 static const char *commandname = NULL;
-#else
-/** Pipe-pair for Unix IPC */
-static int outcome_pipe[2] = { -1, -1 };
 #endif
 
 static int
@@ -124,32 +121,43 @@ _testcase_run_forked(const struct testgroup_t *group,
 	CloseHandle(info.hThread);
 	return exitcode == 0;
 #else
+	int outcome_pipe[2];
 	pid_t pid;
         (void)group;
-	if (outcome_pipe[0] == -1) {
-		if (pipe(outcome_pipe))
-			perror("opening pipe");
-	}
+
+	if (pipe(outcome_pipe))
+		perror("opening pipe");
 
 	if (opt_verbosity)
 		printf("[forking] ");
 	pid = fork();
 	if (!pid) {
 		/* child. */
-		int test_r = _testcase_run_bare(testcase);
-		int write_r = write(outcome_pipe[1], test_r ? "Y" : "N", 1);
+		int test_r, write_r;
+		close(outcome_pipe[0]);
+		test_r = _testcase_run_bare(testcase);
+	        write_r = write(outcome_pipe[1], test_r ? "Y" : "N", 1);
 		if (write_r != 1) {
 			perror("write outcome to pipe");
 			exit(1);
 		}
 		exit(0);
 	} else {
+		/* parent */
 		int status, r;
 		char b[1];
+		/* Close this now, so that if the other side closes it,
+		 * our read fails. */
+		close(outcome_pipe[1]);
 		r = read(outcome_pipe[0], b, 1);
-		if (r != 1)
+		if (r == 0) {
+			printf("[Lost connection!] ");
+			return 0;
+		} else if (r != 1) {
 			perror("read outcome from pipe");
+		}
 		waitpid(pid, &status, 0);
+		close(outcome_pipe[0]);
 		return b[0] == 'Y' ? 1 : 0;
 	}
 #endif
