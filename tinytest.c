@@ -31,6 +31,7 @@ static int opt_forked = 0;
 static int opt_verbosity = 1;
 
 static int cur_test_outcome = 0;
+const char *cur_test_prefix = NULL;
 const char *cur_test_name = NULL;
 
 #ifdef WIN32
@@ -147,8 +148,10 @@ testcase_run(const struct testgroup_t *group, const struct testcase_t *testcase)
 
 	if (opt_verbosity && !opt_forked)
 		printf("%s%s... ", group->prefix, testcase->name);
-	else
+	else {
+		cur_test_prefix = group->prefix;
 		cur_test_name = testcase->name;
+	}
 
 	if ((testcase->flags & TT_FORK) && !opt_forked) {
 		outcome = _testcase_run_forked(group, testcase);
@@ -209,6 +212,10 @@ tinytest_main(int c, const char **v, struct testgroup_t *groups)
 				opt_verbosity = 0;
 			else if (!strcmp(v[i], "--loud"))
 				opt_verbosity = 2;
+			else {
+				printf("Unkonwn option %s\n",v[i]);
+				return -1;
+			}
 		} else {
 			++n;
 			if (!_tinytest_set_flag(groups, v[i], _TT_ENABLED)) {
@@ -243,7 +250,7 @@ void
 _tinytest_set_test_failed(void)
 {
 	if (opt_verbosity == 0 && cur_test_name) {
-		printf("%s... ", cur_test_name);
+		printf("%s%s... ", cur_test_prefix, cur_test_name);
 		cur_test_name = NULL;
 	}
 	cur_test_outcome = 0;
