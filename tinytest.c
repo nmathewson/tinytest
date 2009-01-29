@@ -250,32 +250,3 @@ _tinytest_set_test_failed(void)
 	cur_test_outcome = 0;
 }
 
-void testcase_add(void *data)
-{
-	tt_want(1==10);
-	tt_int_eq(1+1, 2);
-	tt_int_eq(1+1, 3);
- end:
-	return;
-}
-
-void testcase_add2(void *data)
-{
-	tt_want(10==10);
-	tt_int_eq(1+1, 2);
-	tt_int_neq(1+1, 3);
- end:
-	return;
-}
-
-struct testcase_t tc[] = {
-	{ "add", testcase_add, TT_FORK, NULL },
-	{ "add2", testcase_add2, 0, NULL },
-	{ NULL, NULL, 0 },
-};
-
-int main(int c, const char **v)
-{
-	tinytest_main(c, v, tc);
-	return 0;
-}
