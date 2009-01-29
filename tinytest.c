@@ -78,7 +78,8 @@ _testcase_run_forked(const struct testgroup_t *group,
 		       " called from within tinytest_main.\n");
 		abort();
 	}
-	printf("[forking] ");
+	if (opt_verbosity)
+		printf("[forking] ");
 
 	verbosity = (opt_verbosity == 2) ? "--loud" :
 		(opt_verbosity == 0) ? "--quiet" : "";
