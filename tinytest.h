@@ -9,6 +9,8 @@
 #define _TINYTEST_H
 
 #define TT_FORK  1
+#define TT_SKIP  2
+#define _TT_ENABLED  4
 
 typedef void (*testcase_fn)(void *);
 
@@ -27,19 +29,19 @@ struct testcase_t {
 	void *setup_data;
 };
 
+struct testgroup_t {
+	const char *prefix;
+	struct testcase_t *cases;
+};
+
 void _tinytest_set_test_failed(void);
 int _tinytest_get_verbosity(void);
+int _tinytest_set_flag(struct testgroup_t *groups, const char *arg, unsigned long flag);
 
-#if 0
-struct testgroup_t;
-struct testgroup_t *tinytest_group_new(const char *name);
-void tinytest_group_add(struct testgroup_t *, struct testgroup_t *);
-void tinytest_group_add_cases(struct testgroup_t *, struct testcase_t *);
-void tinytest_group_free(struct testgroup_t *);
-#endif
+#define tinytest_skip(groups, named) \
+	_tinytest_set_flag(groups, named, TT_SKIP)
 
 int testcase_run_testcase(const struct testcase_t *);
-int tinytest_main(int argc, const char **argv, struct testcase_t *testcase);
-
+int tinytest_main(int argc, const char **argv, struct testgroup_t *groups);
 
 #endif

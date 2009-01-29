@@ -20,11 +20,6 @@
 #include "tinytest.h"
 #include "tinytest_macros.h"
 
-struct testgroup_t {
-	const char *name;
-	const struct testcase *testcases;
-};
-
 static int in_tinytest_main = 0;
 static int n_ok = 0;
 static int n_bad = 0;
@@ -128,6 +123,12 @@ testcase_run(const struct testcase_t *testcase)
 {
 	int outcome;
 
+	if (testcase->flags & TT_SKIP) {
+		if (opt_verbosity)
+			printf("%s... SKIPPED\n", testcase->name);
+		return 1;
+	}
+
 	if (opt_verbosity)
 		printf("%s... ", testcase->name);
 	else
@@ -155,20 +156,31 @@ testcase_run(const struct testcase_t *testcase)
 	}
 }
 
+#define LONGEST_TEST_NAME 16384
 int
-tinytest_main(int c, const char **v, struct testcase_t *cases)
+_tinytest_set_flag(struct testgroup_t *groups, const char *arg, unsigned long flag)
 {
-	unsigned int *tc_enabled = NULL;
-	int returnval = -1;
-	int n_testcases, i, j, n_enabled=0;
-
-	for (n_testcases=0; cases[n_testcases].name; ++n_testcases)
-		;
-
-	if (!(tc_enabled = calloc(n_testcases, sizeof(int)))) {
-		perror("calloc");
-		return -1;
+	int i, j;
+	int length = strchr(arg,'*') ? (strchr(arg,'*')-arg) : LONGEST_TEST_NAME;
+	char fullname[LONGEST_TEST_NAME];
+	int found=0;
+	for (i=0; groups[i].prefix; ++i) {
+		for (j=0; groups[i].cases[j].name; ++j) {
+			snprintf(fullname, sizeof(fullname), "%s%s",
+				 groups[i].prefix, groups[i].cases[j].name);
+			if (!strncmp(fullname, arg, length)) {
+				groups[i].cases[j].flags |= flag;
+				++found;
+			}
+		}
 	}
+	return found;
+}
+
+int
+tinytest_main(int c, const char **v, struct testgroup_t *groups)
+{
+	int i, j, n=0;
 
 #ifdef WIN32
 	commandname = v[0];
@@ -184,47 +196,27 @@ tinytest_main(int c, const char **v, struct testcase_t *cases)
 			else if (!strcmp(v[i], "--loud"))
 				opt_verbosity = 2;
 		} else {
-			int found = 0;
-			int wildcard;
-			if (strchr(v[i], '*'))
-				wildcard = strchr(v[i], '*')-v[i];
-			else
-				wildcard = 8192;
-
-			n_enabled++;
-			for (j=0; j<n_testcases; ++j) {
-				if (!strncmp(cases[j].name, v[i], wildcard)) {
-					tc_enabled[j] = found = 1;
-				}
-			}
-			if (!found) {
+			++n;
+			if (!_tinytest_set_flag(groups, v[i], _TT_ENABLED)) {
 				printf("No such test as %s!\n", v[i]);
-				goto out;
+				return -1;
 			}
 		}
 	}
-	if (!n_enabled) {
-		for (j=0; j<n_testcases; ++j)
-			tc_enabled[j] = 1;
-	}
+	if (!n)
+		_tinytest_set_flag(groups, "*", _TT_ENABLED);
 
 	setvbuf(stdout, NULL, _IONBF, 0);
 
-	in_tinytest_main = 1;
-	for (i=0; i<n_testcases; ++i) {
-		if (tc_enabled[i])
-			testcase_run(&cases[i]);
-	}
-	in_tinytest_main = 0;
+	++in_tinytest_main;
+	for (i=0; groups[i].prefix; ++i)
+		for (j=0; groups[i].cases[j].name; ++j)
+			if (groups[i].cases[j].flags & _TT_ENABLED)
+				testcase_run(&groups[i].cases[j]);
 
-	if (n_bad == 0)
-		returnval = 1;
-	else
-		returnval = 0;
- out:
-	if (tc_enabled)
-		free(tc_enabled);
-	return returnval;
+	--in_tinytest_main;
+
+	return (n_bad == 0) ? 1 : 0;
 }
 
 int

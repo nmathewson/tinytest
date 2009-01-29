@@ -42,8 +42,14 @@ struct testcase_t tc[] = {
 	{ NULL, NULL, 0 },
 };
 
+struct testgroup_t groups[] = {
+	{ "x/", tc },
+	{ NULL, NULL },
+};
+
 int main(int c, const char **v)
 {
-	tinytest_main(c, v, tc);
+	tinytest_skip(groups, "x/other");
+	tinytest_main(c, v, groups);
 	return 0;
 }
