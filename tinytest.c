@@ -76,7 +76,7 @@ _testcase_run_bare(const struct testcase_t *testcase)
 	outcome = cur_test_outcome;
 
 	if (testcase->setup) {
-		if (testcase->setup->cleanup_fn(env) == 0)
+		if (testcase->setup->cleanup_fn(testcase, env) == 0)
 			outcome = 0;
 	}
 
@@ -156,7 +156,8 @@ _testcase_run_forked(const struct testgroup_t *group,
 }
 
 int
-testcase_run(const struct testgroup_t *group, const struct testcase_t *testcase)
+testcase_run_one(const struct testgroup_t *group,
+		 const struct testcase_t *testcase)
 {
 	int outcome;
 
@@ -202,10 +203,10 @@ _tinytest_set_flag(struct testgroup_t *groups, const char *arg, unsigned long fl
 {
 	int i, j;
 	int length = LONGEST_TEST_NAME;
-	if (strstr(arg, ".."))
-		length = strstr(arg,"..")-arg;
 	char fullname[LONGEST_TEST_NAME];
 	int found=0;
+	if (strstr(arg, ".."))
+		length = strstr(arg,"..")-arg;
 	for (i=0; groups[i].prefix; ++i) {
 		for (j=0; groups[i].cases[j].name; ++j) {
 			snprintf(fullname, sizeof(fullname), "%s%s",
@@ -269,13 +270,14 @@ tinytest_main(int c, const char **v, struct testgroup_t *groups)
 	for (i=0; groups[i].prefix; ++i)
 		for (j=0; groups[i].cases[j].name; ++j)
 			if (groups[i].cases[j].flags & _TT_ENABLED)
-				testcase_run(&groups[i], &groups[i].cases[j]);
+				testcase_run_one(&groups[i],
+						 &groups[i].cases[j]);
 
 	--in_tinytest_main;
 
 	if (n_bad)
 		printf("%d TESTS FAILED.\n", n_bad);
-	return (n_bad == 0) ? 1 : 0;
+	return (n_bad == 0) ? 0 : 1;
 }
 
 int

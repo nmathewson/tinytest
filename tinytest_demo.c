@@ -49,10 +49,10 @@ test_strcmp(void *data)
 	if (strcmp("","")) {
 		/* This macro tells tinytest to stop the current test
 		 * and go straight to the "end" label. */
-		tt_fail_msg("The empty string was not equal to itself");
+		tt_abort_msg("The empty string was not equal to itself");
 	}
 
-	/* Pretty often, calling tt_fail_msg to indicate failure is more
+	/* Pretty often, calling tt_abort_msg to indicate failure is more
 	   heavy-weight than you want.  Instead, just say: */
 	tt_assert(strcmp("testcase", "testcase") == 0);
 
@@ -117,7 +117,7 @@ setup_data_buffer(const struct testcase_t *testcase)
 /* The clean function deallocates storage carefully and returns true on
    success. */
 int
-clean_data_buffer(void *ptr)
+clean_data_buffer(const struct testcase_t *testcase, void *ptr)
 {
 	struct data_buffer *db = ptr;
 

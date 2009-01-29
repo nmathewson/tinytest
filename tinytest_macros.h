@@ -61,9 +61,18 @@
 	TT_EXIT_TEST_FUNCTION;					\
 	TT_STMT_END
 
-/* Fail the current test for the reason in msg */
-#define tt_fail_msg(msg) TT_DIE((msg))
+#define TT_FAIL(args)				\
+	TT_STMT_BEGIN						\
+	_tinytest_set_test_failed();				\
+	TT_GRIPE(args);						\
+	TT_STMT_END
 
+/* Fail and abort the current test for the reason in msg */
+#define tt_abort_msg(msg) TT_DIE((msg))
+#define tt_abort() tt_fail_msg("(Failed.)")
+
+/* Fail but do not abort the current test for the reason in msg. */
+#define tt_fail_msg(msg) TT_FAIL((msg))
 #define tt_fail() tt_fail_msg("(Failed.)")
 
 #define _tt_want(b, msg, fail)				\

@@ -44,7 +44,7 @@ struct testcase_setup_t {
 	/** Return a new structure for use by a given testcase. */
 	void *(*setup_fn)(const struct testcase_t *);
 	/** Clean/free a structure from setup_fn. Return 1 if ok, 0 on err. */
-	int (*cleanup_fn)(void *);
+	int (*cleanup_fn)(const struct testcase_t *, void *);
 };
 
 /** A single test-case that you can run. */
@@ -77,7 +77,7 @@ int _tinytest_set_flag(struct testgroup_t *, const char *, unsigned long);
 	_tinytest_set_flag(groups, named, TT_SKIP)
 
 /** Run a single testcase in a single group. */
-int testcase_run_testcase(const struct testgroup_t *,const struct testcase_t *);
+int testcase_run_one(const struct testgroup_t *,const struct testcase_t *);
 /** Run a set of testcases from an END_OF_GROUPS-terminated array of groups,
     as selected from the command line. */
 int tinytest_main(int argc, const char **argv, struct testgroup_t *groups);
