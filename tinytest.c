@@ -62,7 +62,8 @@ _testcase_run_bare(const struct testcase_t *testcase)
 }
 
 static int
-_testcase_run_forked(const struct testcase_t *testcase)
+_testcase_run_forked(const struct testgroup_t *group,
+		     const struct testcase_t *testcase)
 {
 #ifdef WIN32
 	int ok;
@@ -81,8 +82,8 @@ _testcase_run_forked(const struct testcase_t *testcase)
 
 	verbosity = (opt_verbosity == 2) ? "--loud" :
 		(opt_verbosity == 0) ? "--quiet" : "";
-	snprintf(buffer, sizeof(buffer), "%s --RUNNING-FORKED %s %s",
-		 commandname, verbosity, testcase->name);
+	snprintf(buffer, sizeof(buffer), "%s --RUNNING-FORKED %s %s%s",
+		 commandname, verbosity, group->prefix, testcase->name);
 
 	memset(&si, 0, sizeof(si));
 	memset(&info, 0, sizeof(info));
@@ -101,6 +102,7 @@ _testcase_run_forked(const struct testcase_t *testcase)
 	return exitcode == 0;
 #else
 	pid_t pid;
+        (void)group;
 	if (outcome_pipe[0] == -1) {
 		if (pipe(outcome_pipe))
 			perror("opening pipe");
@@ -130,23 +132,24 @@ _testcase_run_forked(const struct testcase_t *testcase)
 }
 
 int
-testcase_run(const struct testcase_t *testcase)
+testcase_run(const struct testgroup_t *group, const struct testcase_t *testcase)
 {
 	int outcome;
 
 	if (testcase->flags & TT_SKIP) {
 		if (opt_verbosity)
-			printf("%s... SKIPPED\n", testcase->name);
+			printf("%s%s... SKIPPED\n",
+			    group->prefix, testcase->name);
 		return 1;
 	}
 
 	if (opt_verbosity && !opt_forked)
-		printf("%s... ", testcase->name);
+		printf("%s%s... ", group->prefix, testcase->name);
 	else
 		cur_test_name = testcase->name;
 
 	if ((testcase->flags & TT_FORK) && !opt_forked) {
-		outcome = _testcase_run_forked(testcase);
+		outcome = _testcase_run_forked(group, testcase);
 	} else {
 		outcome  = _testcase_run_bare(testcase);
 	}
@@ -221,7 +224,7 @@ tinytest_main(int c, const char **v, struct testgroup_t *groups)
 	for (i=0; groups[i].prefix; ++i)
 		for (j=0; groups[i].cases[j].name; ++j)
 			if (groups[i].cases[j].flags & _TT_ENABLED)
-				testcase_run(&groups[i].cases[j]);
+				testcase_run(&groups[i], &groups[i].cases[j]);
 
 	--in_tinytest_main;
 

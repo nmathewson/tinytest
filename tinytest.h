@@ -42,7 +42,7 @@ int _tinytest_set_flag(struct testgroup_t *groups, const char *arg, unsigned lon
 #define tinytest_skip(groups, named) \
 	_tinytest_set_flag(groups, named, TT_SKIP)
 
-int testcase_run_testcase(const struct testcase_t *);
+int testcase_run_testcase(const struct testgroup_t *,const struct testcase_t *);
 int tinytest_main(int argc, const char **argv, struct testgroup_t *groups);
 
 #endif
