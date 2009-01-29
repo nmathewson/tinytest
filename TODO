@@ -1,7 +1,7 @@
 Things to do to tinytest
 
 - Replace the license with something recognizeable
-- Test forking on win32.
+o Test forking on win32.
 o Write minimalist libevent-legacy thing.
 - port libevent tests; move libevent test main into a new regress_main
 - allow per-group forks.
