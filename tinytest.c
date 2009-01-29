@@ -85,6 +85,14 @@ _testcase_run_forked(const struct testgroup_t *group,
 		     const struct testcase_t *testcase)
 {
 #ifdef WIN32
+	/* Fork? On Win32?  How primitive!  We'll do what the smart kids do:
+	   we'll invoke our own exe (whose name we recall from the command
+	   line) with a command line that tells it to run just the test we
+	   want, and this time without forking.
+
+	   (No, threads aren't an option.  The whole point of forking is to
+	   share no state between tests.)
+	 */
 	int ok;
 	char buffer[LONGEST_TEST_NAME+256];
 	const char *verbosity;
