@@ -21,12 +21,13 @@
 #include "tinytest.h"
 #include "tinytest_macros.h"
 
+#define LONGEST_TEST_NAME 16384
+
 static int in_tinytest_main = 0;
 static int n_ok = 0;
 static int n_bad = 0;
 
-static int opt_nofork = 0;
-static int opt_exitcode = 0;
+static int opt_forked = 0;
 static int opt_verbosity = 1;
 
 static int cur_test_outcome = 0;
@@ -65,7 +66,7 @@ _testcase_run_forked(const struct testcase_t *testcase)
 {
 #ifdef WIN32
 	int ok;
-	char buffer[4096];
+	char buffer[LONGEST_TEST_NAME+256];
 	const char *verbosity;
 	STARTUPINFO si;
 	PROCESS_INFORMATION info;
@@ -80,7 +81,7 @@ _testcase_run_forked(const struct testcase_t *testcase)
 
 	verbosity = (opt_verbosity == 2) ? "--loud" :
 		(opt_verbosity == 0) ? "--quiet" : "";
-	snprintf(buffer, sizeof(buffer), "%s --no-fork --exitcode %s %s",
+	snprintf(buffer, sizeof(buffer), "%s --RUNNING-FORKED %s %s",
 		 commandname, verbosity, testcase->name);
 
 	memset(&si, 0, sizeof(si));
@@ -139,12 +140,12 @@ testcase_run(const struct testcase_t *testcase)
 		return 1;
 	}
 
-	if (opt_verbosity && !opt_nofork)
+	if (opt_verbosity && !opt_forked)
 		printf("%s... ", testcase->name);
 	else
 		cur_test_name = testcase->name;
 
-	if ((testcase->flags & TT_FORK) && !opt_nofork) {
+	if ((testcase->flags & TT_FORK) && !opt_forked) {
 		outcome = _testcase_run_forked(testcase);
 	} else {
 		outcome  = _testcase_run_bare(testcase);
@@ -152,22 +153,21 @@ testcase_run(const struct testcase_t *testcase)
 
 	if (outcome) {
 		++n_ok;
-		if (opt_verbosity && !opt_nofork)
+		if (opt_verbosity && !opt_forked)
 			puts("OK");
 	} else {
 		++n_bad;
-		if (!opt_nofork)
+		if (!opt_forked)
 			printf("\n  [%s FAILED]\n", testcase->name);
 	}
 
-	if (opt_exitcode) {
+	if (opt_forked) {
 		exit(outcome ? 0 : 1);
 	} else {
 		return outcome;
 	}
 }
 
-#define LONGEST_TEST_NAME 16384
 int
 _tinytest_set_flag(struct testgroup_t *groups, const char *arg, unsigned long flag)
 {
@@ -198,10 +198,8 @@ tinytest_main(int c, const char **v, struct testgroup_t *groups)
 #endif
 	for (i=1; i<c; ++i) {
 		if (v[i][0] == '-') {
-			if (!strcmp(v[i], "--no-fork"))
-				opt_nofork = 1;
-			else if (!strcmp(v[i], "--exitcode"))
-				opt_exitcode = 1;
+			if (!strcmp(v[i], "--RUNNING-FORKED"))
+				opt_forked = 1;
 			else if (!strcmp(v[i], "--quiet"))
 				opt_verbosity = 0;
 			else if (!strcmp(v[i], "--loud"))
