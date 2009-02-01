@@ -1,5 +1,5 @@
 
-all: tt-demo libevent_glue.o
+all: tt-demo
 
 .c.o:
 	gcc -Wall -g -O2 -c $<
