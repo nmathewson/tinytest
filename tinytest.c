@@ -44,9 +44,11 @@
 static int in_tinytest_main = 0; /**< true if we're in tinytest_main().*/
 static int n_ok = 0; /**< Number of tests that have passed */
 static int n_bad = 0; /**< Number of tests that have failed. */
+static int n_skipped = 0; /**< Number of tests that have been skipped. */
 
 static int opt_forked = 0; /**< True iff we're called from inside a win32 fork*/
-static int opt_verbosity = 1; /**< 0==quiet,1==normal,2==verbose */
+static int opt_verbosity = 1; /**< -==quiet,0==terse,1==normal,2==verbose */
+const char *verbosity_flag = "";
 
 enum outcome { SKIP=2, OK=1, FAIL=0 };
 static enum outcome cur_test_outcome = 0;
@@ -109,13 +111,11 @@ _testcase_run_forked(const struct testgroup_t *group,
 		       " called from within tinytest_main.\n");
 		abort();
 	}
-	if (opt_verbosity)
+	if (opt_verbosity>0)
 		printf("[forking] ");
 
-	verbosity = (opt_verbosity == 2) ? "--verbose" :
-		(opt_verbosity == 0) ? "--quiet" : "";
 	snprintf(buffer, sizeof(buffer), "%s --RUNNING-FORKED %s %s%s",
-		 commandname, verbosity, group->prefix, testcase->name);
+		 commandname, verbosity_flag, group->prefix, testcase->name);
 
 	memset(&si, 0, sizeof(si));
 	memset(&info, 0, sizeof(info));
@@ -145,7 +145,7 @@ _testcase_run_forked(const struct testgroup_t *group,
 	if (pipe(outcome_pipe))
 		perror("opening pipe");
 
-	if (opt_verbosity)
+	if (opt_verbosity>0)
 		printf("[forking] ");
 	pid = fork();
 	if (!pid) {
@@ -190,15 +190,17 @@ testcase_run_one(const struct testgroup_t *group,
 	enum outcome outcome;
 
 	if (testcase->flags & TT_SKIP) {
-		if (opt_verbosity)
-			printf("%s%s... SKIPPED\n",
+		if (opt_verbosity>0)
+			printf("%s%s: SKIPPED\n",
 			    group->prefix, testcase->name);
+		++n_skipped;
 		return SKIP;
 	}
 
-	if (opt_verbosity && !opt_forked)
-		printf("%s%s... ", group->prefix, testcase->name);
-	else {
+	if (opt_verbosity>0 && !opt_forked) {
+		printf("%s%s: ", group->prefix, testcase->name);
+	} else {
+		if (opt_verbosity==0) printf(".");
 		cur_test_prefix = group->prefix;
 		cur_test_name = testcase->name;
 	}
@@ -211,10 +213,11 @@ testcase_run_one(const struct testgroup_t *group,
 
 	if (outcome == OK) {
 		++n_ok;
-		if (opt_verbosity && !opt_forked)
+		if (opt_verbosity>0 && !opt_forked)
 			puts(opt_verbosity==1?"OK":"");
 	} else if (outcome == SKIP) {
-		if (opt_verbosity && !opt_forked)
+		++n_skipped;
+		if (opt_verbosity>0 && !opt_forked)
 			puts("SKIPPED");
 	} else {
 		++n_bad;
@@ -256,7 +259,7 @@ _tinytest_set_flag(struct testgroup_t *groups, const char *arg, unsigned long fl
 static void
 usage(struct testgroup_t *groups)
 {
-	puts("Options are: --verbose --quiet");
+	puts("Options are: [--verbose|--quiet|--terse]");
 	puts("Known tests are:");
 	_tinytest_set_flag(groups, "..", 0);
 	exit(0);
@@ -272,15 +275,20 @@ tinytest_main(int c, const char **v, struct testgroup_t *groups)
 #endif
 	for (i=1; i<c; ++i) {
 		if (v[i][0] == '-') {
-			if (!strcmp(v[i], "--RUNNING-FORKED"))
+			if (!strcmp(v[i], "--RUNNING-FORKED")) {
 				opt_forked = 1;
-			else if (!strcmp(v[i], "--quiet"))
-				opt_verbosity = 0;
-			else if (!strcmp(v[i], "--verbose"))
+			} else if (!strcmp(v[i], "--quiet")) {
+				opt_verbosity = -1;
+				verbosity_flag = "--quiet";
+			} else if (!strcmp(v[i], "--verbose")) {
 				opt_verbosity = 2;
-			else if (!strcmp(v[i], "--help"))
+				verbosity_flag = "--verbose";
+			} else if (!strcmp(v[i], "--terse")) {
+				opt_verbosity = 0;
+				verbosity_flag = "--terse";
+			} else if (!strcmp(v[i], "--help")) {
 				usage(groups);
-			else {
+			} else {
 				printf("Unknown option %s.  Try --help\n",v[i]);
 				return -1;
 			}
@@ -293,7 +301,7 @@ tinytest_main(int c, const char **v, struct testgroup_t *groups)
 		}
 	}
 	if (!n)
-		_tinytest_set_flag(groups, "...", _TT_ENABLED);
+		_tinytest_set_flag(groups, "..", _TT_ENABLED);
 
 	setvbuf(stdout, NULL, _IONBF, 0);
 
@@ -306,8 +314,15 @@ tinytest_main(int c, const char **v, struct testgroup_t *groups)
 
 	--in_tinytest_main;
 
+	if (opt_verbosity==0)
+		puts("");
+
 	if (n_bad)
-		printf("%d TESTS FAILED.\n", n_bad);
+		printf("%d/%d TESTS FAILED. (%d skipped)\n", n_bad,
+		       n_bad+n_ok,n_skipped);
+	else if (opt_verbosity >= 1)
+		printf("%d tests ok.  (%d skipped)\n", n_ok, n_skipped);
+
 	return (n_bad == 0) ? 0 : 1;
 }
 
@@ -320,8 +335,9 @@ _tinytest_get_verbosity(void)
 void
 _tinytest_set_test_failed(void)
 {
-	if (opt_verbosity == 0 && cur_test_name) {
-		printf("%s%s... ", cur_test_prefix, cur_test_name);
+	if (opt_verbosity <= 0 && cur_test_name) {
+		if (opt_verbosity==0) puts("");
+		printf("%s%s: ", cur_test_prefix, cur_test_name);
 		cur_test_name = NULL;
 	}
 	cur_test_outcome = 0;
