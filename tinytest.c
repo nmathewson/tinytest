@@ -47,6 +47,7 @@ static int n_bad = 0; /**< Number of tests that have failed. */
 static int n_skipped = 0; /**< Number of tests that have been skipped. */
 
 static int opt_forked = 0; /**< True iff we're called from inside a win32 fork*/
+static int opt_nofork = 0; /**< Suppress calls to fork() for debugging. */
 static int opt_verbosity = 1; /**< -==quiet,0==terse,1==normal,2==verbose */
 const char *verbosity_flag = "";
 
@@ -205,7 +206,7 @@ testcase_run_one(const struct testgroup_t *group,
 		cur_test_name = testcase->name;
 	}
 
-	if ((testcase->flags & TT_FORK) && !opt_forked) {
+	if ((testcase->flags & TT_FORK) && !(opt_forked||opt_nofork)) {
 		outcome = _testcase_run_forked(group, testcase);
 	} else {
 		outcome  = _testcase_run_bare(testcase);
@@ -259,7 +260,7 @@ _tinytest_set_flag(struct testgroup_t *groups, const char *arg, unsigned long fl
 static void
 usage(struct testgroup_t *groups)
 {
-	puts("Options are: [--verbose|--quiet|--terse]");
+	puts("Options are: [--verbose|--quiet|--terse] [--no-fork]");
 	puts("Known tests are:");
 	_tinytest_set_flag(groups, "..", 0);
 	exit(0);
@@ -277,6 +278,8 @@ tinytest_main(int c, const char **v, struct testgroup_t *groups)
 		if (v[i][0] == '-') {
 			if (!strcmp(v[i], "--RUNNING-FORKED")) {
 				opt_forked = 1;
+			} else if (!strcmp(v[i], "--no-fork")) {
+				opt_nofork = 1;
 			} else if (!strcmp(v[i], "--quiet")) {
 				opt_verbosity = -1;
 				verbosity_flag = "--quiet";
