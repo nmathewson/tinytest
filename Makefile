@@ -1,3 +1,4 @@
+VERSION=1.0.1
 
 all: tt-demo
 
@@ -18,3 +19,12 @@ lines:
 
 clean:
 	rm -f *.o *~ tt-demo
+
+DISTFILES=tinytest.c tinytest_demo.c tinytest.h tinytest_macros.h Makefile \
+	README
+
+dist:
+	rm -rf tinytest-$(VERSION)
+	mkdir tinytest-$(VERSION)
+	cp $(DISTFILES) tinytest-$(VERSION)
+	tar cf - tinytest-$(VERSION) | gzip -c -9 > tinytest-$(VERSION).tar.gz
