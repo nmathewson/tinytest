@@ -36,6 +36,10 @@
 #include <unistd.h>
 #endif
 
+#ifndef __GNUC__
+#define __attribute__(x)
+#endif
+
 #include "tinytest.h"
 #include "tinytest_macros.h"
 
@@ -61,6 +65,9 @@ const char *cur_test_name = NULL;
 /** Pointer to argv[0] for win32. */
 static const char *commandname = NULL;
 #endif
+
+static void usage(struct testgroup_t *groups, int list_groups)
+  __attribute__((noreturn));
 
 static enum outcome
 _testcase_run_bare(const struct testcase_t *testcase)
