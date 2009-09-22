@@ -165,7 +165,7 @@ _testcase_run_forked(const struct testgroup_t *group,
 		test_r = _testcase_run_bare(testcase);
 		assert(0<=(int)test_r && (int)test_r<=2);
 		b[0] = "NYS"[test_r];
-	        write_r = write(outcome_pipe[1], b, 1);
+	        write_r = (int)write(outcome_pipe[1], b, 1);
 		if (write_r != 1) {
 			perror("write outcome to pipe");
 			exit(1);
@@ -178,7 +178,7 @@ _testcase_run_forked(const struct testgroup_t *group,
 		/* Close this now, so that if the other side closes it,
 		 * our read fails. */
 		close(outcome_pipe[1]);
-		r = read(outcome_pipe[0], b, 1);
+		r = (int)read(outcome_pipe[0], b, 1);
 		if (r == 0) {
 			printf("[Lost connection!] ");
 			return 0;
@@ -245,7 +245,7 @@ int
 _tinytest_set_flag(struct testgroup_t *groups, const char *arg, unsigned long flag)
 {
 	int i, j;
-	int length = LONGEST_TEST_NAME;
+	size_t length = LONGEST_TEST_NAME;
 	char fullname[LONGEST_TEST_NAME];
 	int found=0;
 	if (strstr(arg, ".."))
