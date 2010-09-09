@@ -28,7 +28,7 @@
 
 /* Helpers for defining statement-like macros */
 #define TT_STMT_BEGIN do {
-#define TT_STMT_END } while(0)
+#define TT_STMT_END } while (0)
 
 /* Redefine this if your test functions want to abort with something besides
  * "goto end;" */
@@ -45,7 +45,7 @@
 	TT_STMT_END
 #endif
 
-/* Announce a failure.	Args are parenthesized printf args. */
+/* Announce a failure. Args are parenthesized printf args. */
 #define TT_GRIPE(args) TT_DECLARE("FAIL", args)
 
 /* Announce a non-failure if we're verbose. */
@@ -80,7 +80,7 @@
 #define tt_fail() TT_FAIL(("%s", "(Failed.)"))
 
 /* End the current test, and indicate we are skipping it. */
-#define tt_skip()				\
+#define tt_skip()						\
 	TT_STMT_BEGIN						\
 	_tinytest_set_test_skipped();				\
 	TT_EXIT_TEST_FUNCTION;					\

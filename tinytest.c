@@ -217,7 +217,7 @@ testcase_run_one(const struct testgroup_t *group,
 	if ((testcase->flags & TT_FORK) && !(opt_forked||opt_nofork)) {
 		outcome = _testcase_run_forked(group, testcase);
 	} else {
-		outcome	 = _testcase_run_bare(testcase);
+		outcome = _testcase_run_bare(testcase);
 	}
 
 	if (outcome == OK) {
@@ -269,8 +269,8 @@ static void
 usage(struct testgroup_t *groups, int list_groups)
 {
 	puts("Options are: [--verbose|--quiet|--terse] [--no-fork]");
-	puts("	Specify tests by name, or using a prefix ending with '..'");
-	puts("	Use --list-tests for a list of tests.");
+	puts("  Specify tests by name, or using a prefix ending with '..'");
+	puts("  Use --list-tests for a list of tests.");
 	if (list_groups) {
 		puts("Known tests are:");
 		_tinytest_set_flag(groups, "..", 0);
