@@ -1,9 +1,9 @@
-Tinytest is a little test framework written in C by Nick Mathewson.
+Tinytest is a tiny little test framework written in C by Nick Mathewson.
 
 It is distributed under the 3-clause BSD license.  You can use it in
 your own programs so long as you follow the license's conditions.
 
-It's been tested on Windows, Mac, and some of the free Unixes.
+It's been tested on Windows, Mac, and many of the free Unixes.
 
 It knows how to fork before running certain tests, and it makes
 text-mode output in a format I like.
