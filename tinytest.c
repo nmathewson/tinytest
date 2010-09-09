@@ -40,6 +40,9 @@
 #define __attribute__(x)
 #endif
 
+#ifdef TINYTEST_LOCAL
+#include "tinytest_local.h"
+#endif
 #include "tinytest.h"
 #include "tinytest_macros.h"
 
