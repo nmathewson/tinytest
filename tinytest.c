@@ -273,6 +273,7 @@ usage(struct testgroup_t *groups, int list_groups)
 {
 	puts("Options are: [--verbose|--quiet|--terse] [--no-fork]");
 	puts("  Specify tests by name, or using a prefix ending with '..'");
+	puts("  To skip a test, list give its name prefixed with a colon.");
 	puts("  Use --list-tests for a list of tests.");
 	if (list_groups) {
 		puts("Known tests are:");
@@ -313,8 +314,15 @@ tinytest_main(int c, const char **v, struct testgroup_t *groups)
 				return -1;
 			}
 		} else {
-			++n;
-			if (!_tinytest_set_flag(groups, v[i], _TT_ENABLED)) {
+			const char *test = v[i];
+			int flag = _TT_ENABLED;
+			if (test[0] == ':') {
+				++test;
+				flag = TT_SKIP;
+			} else {
+				++n;
+			}
+			if (!_tinytest_set_flag(groups, test, flag)) {
 				printf("No such test as %s!\n", v[i]);
 				return -1;
 			}
