@@ -271,9 +271,16 @@ tinytest_set_flag_(struct testgroup_t *groups, const char *arg, int set, unsigne
 		for (j=0; groups[i].cases[j].name; ++j) {
 			struct testcase_t *testcase = &groups[i].cases[j];
 			snprintf(fullname, sizeof(fullname), "%s%s",
-				 groups[i].prefix, groups[i].cases[j].name);
-			if (!flag) /* Hack! */
-				printf("    %s\n", fullname);
+				 groups[i].prefix, testcase->name);
+			if (!flag) { /* Hack! */
+				printf("    %s", fullname);
+				if (testcase->flags & TT_OFF_BY_DEFAULT)
+					puts("   (Off by default)");
+				else if (testcase->flags & TT_SKIP)
+					puts("  (DISABLED)");
+				else
+					puts("");
+			}
 			if (!strncmp(fullname, arg, length)) {
 				if (set)
 					testcase->flags |= flag;
