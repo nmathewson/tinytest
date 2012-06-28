@@ -353,6 +353,7 @@ tinytest_main(int c, const char **v, struct testgroup_t *groups)
 				flag = TT_SKIP;
 			} else if (test[0] == '+') {
 				++test;
+				++n;
 				if (!tinytest_set_flag_(groups, test, 0, TT_OFF_BY_DEFAULT)) {
 					printf("No such test as %s!\n", v[i]);
 					return -1;
