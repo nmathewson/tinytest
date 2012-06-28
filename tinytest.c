@@ -259,7 +259,7 @@ testcase_run_one(const struct testgroup_t *group,
 }
 
 int
-tinytest_set_flag_(struct testgroup_t *groups, const char *arg, unsigned long flag)
+tinytest_set_flag_(struct testgroup_t *groups, const char *arg, int set, unsigned long flag)
 {
 	int i, j;
 	size_t length = LONGEST_TEST_NAME;
@@ -269,12 +269,16 @@ tinytest_set_flag_(struct testgroup_t *groups, const char *arg, unsigned long fl
 		length = strstr(arg,"..")-arg;
 	for (i=0; groups[i].prefix; ++i) {
 		for (j=0; groups[i].cases[j].name; ++j) {
+			struct testcase_t *testcase = &groups[i].cases[j];
 			snprintf(fullname, sizeof(fullname), "%s%s",
 				 groups[i].prefix, groups[i].cases[j].name);
 			if (!flag) /* Hack! */
 				printf("    %s\n", fullname);
 			if (!strncmp(fullname, arg, length)) {
-				groups[i].cases[j].flags |= flag;
+				if (set)
+					testcase->flags |= flag;
+				else
+					testcase->flags &= ~flag;
 				++found;
 			}
 		}
@@ -291,7 +295,7 @@ usage(struct testgroup_t *groups, int list_groups)
 	puts("  Use --list-tests for a list of tests.");
 	if (list_groups) {
 		puts("Known tests are:");
-		tinytest_set_flag_(groups, "..", 0);
+		tinytest_set_flag_(groups, "..", 1, 0);
 	}
 	exit(0);
 }
@@ -338,24 +342,30 @@ tinytest_main(int c, const char **v, struct testgroup_t *groups)
 			if (test[0] == ':') {
 				++test;
 				flag = TT_SKIP;
+			} else if (test[0] == '+') {
+				++test;
+				if (!tinytest_set_flag_(groups, test, 0, TT_OFF_BY_DEFAULT)) {
+					printf("No such test as %s!\n", v[i]);
+					return -1;
+				}
 			} else {
 				++n;
 			}
-			if (!tinytest_set_flag_(groups, test, flag)) {
+			if (!tinytest_set_flag_(groups, test, 1, flag)) {
 				printf("No such test as %s!\n", v[i]);
 				return -1;
 			}
 		}
 	}
 	if (!n)
-		tinytest_set_flag_(groups, "..", TT_ENABLED_);
+		tinytest_set_flag_(groups, "..", 1, TT_ENABLED_);
 
 	setvbuf(stdout, NULL, _IONBF, 0);
 
 	++in_tinytest_main;
 	for (i=0; groups[i].prefix; ++i)
 		for (j=0; groups[i].cases[j].name; ++j)
-			if (groups[i].cases[j].flags & TT_ENABLED_)
+			if ((groups[i].cases[j].flags & (TT_ENABLED_|TT_OFF_BY_DEFAULT)) == TT_ENABLED_)
 				testcase_run_one(&groups[i],
 						 &groups[i].cases[j]);
 

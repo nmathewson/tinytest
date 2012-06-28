@@ -32,8 +32,10 @@
 #define TT_SKIP  (1<<1)
 /** Internal runtime flag for a test we've decided to run. */
 #define TT_ENABLED_  (1<<2)
+/** Flag for a test that's off by default. */
+#define TT_OFF_BY_DEFAULT  (1<<3)
 /** If you add your own flags, make them start at this point. */
-#define TT_FIRST_USER_FLAG (1<<3)
+#define TT_FIRST_USER_FLAG (1<<4)
 
 typedef void (*testcase_fn)(void *);
 
@@ -72,7 +74,7 @@ void tinytest_set_test_skipped_(void);
 int tinytest_get_verbosity_(void);
 /** Implementation: Set a flag on tests matching a name; returns number
  * of tests that matched. */
-int tinytest_set_flag_(struct testgroup_t *, const char *, unsigned long);
+int tinytest_set_flag_(struct testgroup_t *, const char *, int set, unsigned long);
 
 /** Set all tests in 'groups' matching the name 'named' to be skipped. */
 #define tinytest_skip(groups, named) \
