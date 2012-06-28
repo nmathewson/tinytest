@@ -221,6 +221,18 @@ struct testgroup_t groups[] = {
 	END_OF_GROUPS
 };
 
+/* We can also define test aliases. These can be used for types of tests that
+ * cut across groups. */
+const char *alltests[] = { "+..", NULL };
+const char *slowtests[] = { "+demo/timeout", NULL };
+struct testlist_alias_t aliases[] = {
+
+	{ "ALL", alltests },
+	{ "SLOW", slowtests },
+
+	END_OF_ALIASES
+};
+
 
 int
 main(int c, const char **v)
@@ -240,5 +252,6 @@ main(int c, const char **v)
 	   "tinytest-demo" and "tinytest-demo .." mean the same thing.
 
 	*/
+	tinytest_set_aliases(aliases);
 	return tinytest_main(c, v, groups);
 }

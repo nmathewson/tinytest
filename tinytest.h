@@ -66,6 +66,12 @@ struct testgroup_t {
 };
 #define END_OF_GROUPS { NULL, NULL}
 
+struct testlist_alias_t {
+	const char *name;
+	const char **tests;
+};
+#define END_OF_ALIASES { NULL, NULL }
+
 /** Implementation: called from a test to indicate failure, before logging. */
 void tinytest_set_test_failed_(void);
 /** Implementation: called from a test to indicate that we're skipping. */
@@ -82,6 +88,9 @@ int tinytest_set_flag_(struct testgroup_t *, const char *, int set, unsigned lon
 
 /** Run a single testcase in a single group. */
 int testcase_run_one(const struct testgroup_t *,const struct testcase_t *);
+
+void tinytest_set_aliases(const struct testlist_alias_t *aliases);
+
 /** Run a set of testcases from an END_OF_GROUPS-terminated array of groups,
     as selected from the command line. */
 int tinytest_main(int argc, const char **argv, struct testgroup_t *groups);

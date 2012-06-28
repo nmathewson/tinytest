@@ -67,6 +67,8 @@ static int opt_nofork = 0; /**< Suppress calls to fork() for debugging. */
 static int opt_verbosity = 1; /**< -==quiet,0==terse,1==normal,2==verbose */
 const char *verbosity_flag = "";
 
+const struct testlist_alias_t *cfg_aliases=NULL;
+
 enum outcome { SKIP=2, OK=1, FAIL=0 };
 static enum outcome cur_test_outcome = 0;
 const char *cur_test_prefix = NULL; /**< prefix of the current test group */
@@ -80,6 +82,7 @@ static char commandname[MAX_PATH+1];
 
 static void usage(struct testgroup_t *groups, int list_groups)
   __attribute__((noreturn));
+static int process_test_option(struct testgroup_t *groups, const char *test);
 
 static enum outcome
 testcase_run_bare_(const struct testcase_t *testcase)
@@ -310,11 +313,33 @@ usage(struct testgroup_t *groups, int list_groups)
 }
 
 static int
+process_test_alias(struct testgroup_t *groups, const char *test)
+{
+	int i, j, n, r;
+	for (i=0; cfg_aliases && cfg_aliases[i].name; ++i) {
+		if (!strcmp(cfg_aliases[i].name, test)) {
+			n = 0;
+			for (j = 0; cfg_aliases[i].tests[j]; ++j) {
+				r = process_test_option(groups, cfg_aliases[i].tests[j]);
+				if (r<0)
+					return -1;
+				n += r;
+			}
+			return n;
+		}
+	}
+	printf("No such test alias as @%s!",test);
+	return -1;
+}
+
+static int
 process_test_option(struct testgroup_t *groups, const char *test)
 {
 	int flag = TT_ENABLED_;
 	int n = 0;
-	if (test[0] == ':') {
+	if (test[0] == '@') {
+		return process_test_alias(groups, test + 1);
+	} else if (test[0] == ':') {
 		++test;
 		flag = TT_SKIP;
 	} else if (test[0] == '+') {
@@ -332,6 +357,12 @@ process_test_option(struct testgroup_t *groups, const char *test)
 		return -1;
 	}
 	return n;
+}
+
+void
+tinytest_set_aliases(const struct testlist_alias_t *aliases)
+{
+	cfg_aliases = aliases;
 }
 
 int
