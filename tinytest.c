@@ -214,10 +214,11 @@ testcase_run_one(const struct testgroup_t *group,
 {
 	enum outcome outcome;
 
-	if (testcase->flags & TT_SKIP) {
+	if (testcase->flags & (TT_SKIP|TT_OFF_BY_DEFAULT)) {
 		if (opt_verbosity>0)
-			printf("%s%s: SKIPPED\n",
-			    group->prefix, testcase->name);
+			printf("%s%s: %s\n",
+			   group->prefix, testcase->name,
+			   (testcase->flags & TT_SKIP) ? "SKIPPED" : "DISABLED");
 		++n_skipped;
 		return SKIP;
 	}
@@ -298,7 +299,8 @@ usage(struct testgroup_t *groups, int list_groups)
 {
 	puts("Options are: [--verbose|--quiet|--terse] [--no-fork]");
 	puts("  Specify tests by name, or using a prefix ending with '..'");
-	puts("  To skip a test, list give its name prefixed with a colon.");
+	puts("  To skip a test, prefix its name with a colon.");
+	puts("  To enable a disabled test, prefix its name with a plus.");
 	puts("  Use --list-tests for a list of tests.");
 	if (list_groups) {
 		puts("Known tests are:");
@@ -372,7 +374,7 @@ tinytest_main(int c, const char **v, struct testgroup_t *groups)
 	++in_tinytest_main;
 	for (i=0; groups[i].prefix; ++i)
 		for (j=0; groups[i].cases[j].name; ++j)
-			if ((groups[i].cases[j].flags & (TT_ENABLED_|TT_OFF_BY_DEFAULT)) == TT_ENABLED_)
+			if (groups[i].cases[j].flags & TT_ENABLED_)
 				testcase_run_one(&groups[i],
 						 &groups[i].cases[j]);
 
