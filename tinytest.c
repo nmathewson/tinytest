@@ -309,6 +309,31 @@ usage(struct testgroup_t *groups, int list_groups)
 	exit(0);
 }
 
+static int
+process_test_option(struct testgroup_t *groups, const char *test)
+{
+	int flag = TT_ENABLED_;
+	int n = 0;
+	if (test[0] == ':') {
+		++test;
+		flag = TT_SKIP;
+	} else if (test[0] == '+') {
+		++test;
+		++n;
+		if (!tinytest_set_flag_(groups, test, 0, TT_OFF_BY_DEFAULT)) {
+			printf("No such test as %s!\n", test);
+			return -1;
+		}
+	} else {
+		++n;
+	}
+	if (!tinytest_set_flag_(groups, test, 1, flag)) {
+		printf("No such test as %s!\n", test);
+		return -1;
+	}
+	return n;
+}
+
 int
 tinytest_main(int c, const char **v, struct testgroup_t *groups)
 {
@@ -346,25 +371,10 @@ tinytest_main(int c, const char **v, struct testgroup_t *groups)
 				return -1;
 			}
 		} else {
-			const char *test = v[i];
-			int flag = TT_ENABLED_;
-			if (test[0] == ':') {
-				++test;
-				flag = TT_SKIP;
-			} else if (test[0] == '+') {
-				++test;
-				++n;
-				if (!tinytest_set_flag_(groups, test, 0, TT_OFF_BY_DEFAULT)) {
-					printf("No such test as %s!\n", v[i]);
-					return -1;
-				}
-			} else {
-				++n;
-			}
-			if (!tinytest_set_flag_(groups, test, 1, flag)) {
-				printf("No such test as %s!\n", v[i]);
+			int r = process_test_option(groups, v[i]);
+			if (r<0)
 				return -1;
-			}
+			n += r;
 		}
 	}
 	if (!n)
