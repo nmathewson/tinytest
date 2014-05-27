@@ -74,7 +74,7 @@ const char *verbosity_flag = "";
 const struct testlist_alias_t *cfg_aliases=NULL;
 
 enum outcome { SKIP=2, OK=1, FAIL=0 };
-static enum outcome cur_test_outcome = 0;
+static enum outcome cur_test_outcome = FAIL;
 const char *cur_test_prefix = NULL; /**< prefix of the current test group */
 /** Name of the current test, if we haven't logged is yet. Used for --quiet */
 const char *cur_test_name = NULL;
@@ -92,7 +92,7 @@ static enum outcome
 testcase_run_bare_(const struct testcase_t *testcase)
 {
 	void *env = NULL;
-	int outcome;
+	enum outcome outcome;
 	if (testcase->setup) {
 		env = testcase->setup->setup_fn(testcase);
 		if (!env)
@@ -206,7 +206,7 @@ testcase_run_forked_(const struct testgroup_t *group,
 		r = (int)read(outcome_pipe[0], b, 1);
 		if (r == 0) {
 			printf("[Lost connection!] ");
-			return 0;
+			return FAIL;
 		} else if (r != 1) {
 			perror("read outcome from pipe");
 		}
@@ -462,7 +462,7 @@ tinytest_set_test_failed_(void)
 		printf("%s%s: ", cur_test_prefix, cur_test_name);
 		cur_test_name = NULL;
 	}
-	cur_test_outcome = 0;
+	cur_test_outcome = FAIL;
 }
 
 void
@@ -475,13 +475,13 @@ tinytest_set_test_skipped_(void)
 char *
 tinytest_format_hex_(const void *val_, unsigned long len)
 {
-	const unsigned char *val = val_;
+	const unsigned char *val = (unsigned char *) val_;
 	char *result, *cp;
 	size_t i;
 
 	if (!val)
 		return strdup("null");
-	if (!(result = malloc(len*2+1)))
+	if (!(result = (char *) malloc(len*2+1)))
 		return strdup("<allocation failure>");
 	cp = result;
 	for (i=0;i<len;++i) {
