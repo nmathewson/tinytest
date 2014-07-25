@@ -74,7 +74,7 @@
 #define tt_abort() TT_DIE(("%s", "(Failed.)"))
 
 /* Fail but do not abort the current test for the reason in msg. */
-#define tt_failprint_f(msg) TT_FAIL(msg)
+#define tt_fail_printf(msg) TT_FAIL(msg)
 #define tt_fail_perror(op) TT_FAIL(("%s: %s [%d]",(op),strerror(errno), errno))
 #define tt_fail_msg(msg) TT_FAIL(("%s", msg))
 #define tt_fail() TT_FAIL(("%s", "(Failed.)"))
