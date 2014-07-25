@@ -196,4 +196,14 @@
 	tt_assert_test_type(a,b,#a" "#op" "#b,const char *,		\
 	    (strcmp(val1_,val2_) op 0),"<%s>",(void)0)
 
+#define tt_want_mem_op(expr1, op, expr2, len)                           \
+  tt_assert_test_fmt_type(expr1,expr2,#expr1" "#op" "#expr2,            \
+			  const void *,                                 \
+			  (val1_ && val2_ && memcmp(val1_, val2_, len) op 0), \
+			  char *, "%s",					\
+			  { print_ = tinytest_format_hex_(value_, (len)); }, \
+			  { if (print_) free(print_); },		\
+			  (void)0                                       \
+                          );
+
 #endif
