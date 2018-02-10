@@ -4,7 +4,7 @@ The tinytest unit testing framework
 Tinytest is a small set of C files that you can use to write tests for
 your C program.  It's designed to make writing tests easy and
 convenient.  It supports the features that I find useful in a unit test
-framework--like running tests in subprocesses so that that they can't
+framework--like running tests in subprocesses so that they can't
 interfere with global state, or like running or suppressing a subset of
 the tests.
 
